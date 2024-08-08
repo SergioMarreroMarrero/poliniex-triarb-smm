@@ -172,6 +172,12 @@ class AvailableTriangleArbitragePairs:
 
 
 def get_price_for_t_pair(t_pair, prices):
+    """
+    Given an arbitrage triangle it retrieves bid/ask prices for any pair
+    :param t_pair: arbitrage triangle pair dictionary
+    :param prices: info price dictionary about any available pair
+    :return: pair bid/ask information
+    """
     t_pair_prices_dict = dict()
     for key, pair in t_pair.items():
         # para todos los key, value(pair) del diccionario
