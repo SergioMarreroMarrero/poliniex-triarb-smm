@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
 import requests
 from collections import Counter
-
+import json
+import os
 
 class APIResponseHandler(ABC):
 
@@ -25,6 +26,12 @@ class PoloniexTradeableTickers(APIResponseHandler):
     def __init__(self, config):
         self.config = config
 
+    def __call__(self):
+        response = self.extract()
+        if response.status_code == 200:
+            return self.unroll(response)
+
+
     def extract(self):
         response = requests.get(self.config['COINS_URL'])
         return response
@@ -38,7 +45,19 @@ class PoloniexTradeableTickers(APIResponseHandler):
         return coin_list
 
 
-class TriangleArbitragePairs:
+class PoloniexTradeablePrices(APIResponseHandler):
+    def __init__(self, config):
+        self.config = config
+
+    def extract(self):
+        response = requests.get(self.config['COIN_PRICE_URL'])
+        return response
+
+    def unroll(self, response):
+        return response.json()
+
+
+class AvailableTriangleArbitragePairs:
 
     def __init__(self, list_of_pairs):
         self.list_of_pairs = list_of_pairs
@@ -131,8 +150,9 @@ class TriangleArbitragePairs:
         list_of_pairs = self.list_of_pairs if list_of_pairs is None else list_of_pairs
         assert type(list_of_pairs) is list, 'list_of_pairs debe ser una lista'
         all_triangles = []
+        print('Iterating over all possile triangles...')
         for a_pair in self.list_of_pairs:
-            print(a_pair)
+            # print(a_pair)
             a_pair_triangles = self._get_triangles_given_a_pair(a_pair)
             if len(a_pair_triangles) > 0:
                 all_triangles.extend(a_pair_triangles)
@@ -140,3 +160,31 @@ class TriangleArbitragePairs:
         clean_triangles = _remove_duplicated_triangles(all_triangles)
         return clean_triangles if not dict_format else _format_triangles(clean_triangles)
 
+    @staticmethod
+    def dump(structured_triangular_pairs, path_to_structured_triangular_pairs):
+
+        directory = os.path.dirname(path_to_structured_triangular_pairs)
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+
+        with open(path_to_structured_triangular_pairs, 'w') as json_file:
+            json.dump(structured_triangular_pairs, json_file, indent=4)
+
+
+def get_price_for_t_pair(t_pair, prices):
+    t_pair_prices_dict = dict()
+    for key, pair in t_pair.items():
+        # para todos los key, value(pair) del diccionario
+        if key in ['pair_a', 'pair_b', 'pair_c']:
+            # si la clave es una de estas tres (el nombre de los pares BTC_USD, etc)
+            for price in prices:
+                # para cada diccionario de precios
+                if price['symbol'] == pair:
+                    # coge el precio del par en el que estemos (BTC_USD) y actualiza el diccionario con ask/bid
+                    t_pair_prices_dict.update(
+                        {
+                            key + '_ask': price['ask'],
+                            key + '_bid': price['bid']
+                        }
+                    )
+    return t_pair_prices_dict
