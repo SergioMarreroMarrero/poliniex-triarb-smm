@@ -10,19 +10,26 @@
 from core import (PoloniexTradeableTickers,
                   PoloniexTradeablePrices,
                   AvailableTriangleArbitragePairs,
-                  get_price_for_t_pair)
+                  get_price_for_t_pair, get_triangle)
 from config import POLONIEX_CONFIG, PATH_TO_STRUCTURED_TRIANGULAR_PAIRS
 import json
 import time
+
+
+
 
 if __name__ == '__main__':
 
     # Step 0
     # get_coin_tickers
     tickers = PoloniexTradeableTickers(config=POLONIEX_CONFIG)()
+    l = PoloniexTradeableTickers(config=POLONIEX_CONFIG).extract()
+    from pprint import pprint
+    pprint(l.json()[0])
+    t_tickers = list(map(lambda x: tuple(x.split('_')), tickers))
 
     # Step 1
-    tap = AvailableTriangleArbitragePairs(list_of_pairs=list(map(lambda x: tuple(x.split('_')), tickers)))
+    tap = AvailableTriangleArbitragePairs(list_of_pairs=t_tickers)
     structured_triangular_pairs = tap.get_all_triangles_given_a_list_of_coins(dict_format=True)
     tap.dump(structured_triangular_pairs=structured_triangular_pairs, path_to_structured_triangular_pairs=PATH_TO_STRUCTURED_TRIANGULAR_PAIRS)
     # Step 2
@@ -31,13 +38,18 @@ if __name__ == '__main__':
 
     # Get Latest Surface Prices
     prices = PoloniexTradeablePrices(config=POLONIEX_CONFIG)()
+    # prices[0]
 
-
-
-    for t_pair in structured_triangular_pairs:
-        time.sleep(0.3)
-        prices_dict = get_price_for_t_pair(t_pair, prices)
-        print(prices_dict)
+    #
+    t_pair = get_triangle(structured_triangular_pairs)
+    # Set Variables
+    min_surface_rate = 0 # threshold
+    surface_dict = {}
+    contract_2 = ""
+    contract_3 = ""
+    direction_trade_1 = ""
+    direction_trade_2 = ""
+    direction_trade_3 = ""
 
 
 

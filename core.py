@@ -189,8 +189,15 @@ def get_price_for_t_pair(t_pair, prices):
                     # coge el precio del par en el que estemos (BTC_USD) y actualiza el diccionario con ask/bid
                     t_pair_prices_dict.update(
                         {
-                            key + '_ask': price['ask'],
-                            key + '_bid': price['bid']
+                            key + '_ask': float(price['ask']),
+                            key + '_bid': float(price['bid'])
                         }
                     )
     return t_pair_prices_dict
+
+
+
+def get_triangle(structured_triangular_pairs, triangle='BTC_USDT,ADA_USDT,ADA_BTC'):
+    for t_pair in structured_triangular_pairs:
+        if t_pair['combined'] == triangle:
+            return t_pair

@@ -6,3 +6,6 @@ curso.py
 # Files
 *.json
 *.csv
+__pycache__
+docs
+database
